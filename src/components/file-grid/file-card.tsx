@@ -88,6 +88,42 @@ const FileCard: React.FC<FileCardProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const generateVideoThumbnail = (file: FileItem): string => {
+    // For demo purposes, return a video-related image from Pexels
+    const videoThumbnails = [
+      'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400&h=300',
+      'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=400&h=300',
+      'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=400&h=300',
+      'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=400&h=300',
+      'https://images.pexels.com/photos/1519088/pexels-photo-1519088.jpeg?auto=compress&cs=tinysrgb&w=400&h=300'
+    ];
+    
+    // Use file ID to consistently pick the same thumbnail
+    const index = parseInt(file.id) % videoThumbnails.length;
+    return videoThumbnails[index];
+  };
+
+  const getThumbnail = () => {
+    if (file.thumbnail) {
+      return file.thumbnail;
+    }
+    
+    if (file.type === 'video') {
+      return generateVideoThumbnail(file);
+    }
+    
+    return null;
+  };
+
+  const handleCardClick = () => {
+    // Make entire card clickable for play/preview
+    if (file.type === 'video' || file.type === 'image') {
+      onPlay(file);
+    } else {
+      onPreview(file);
+    }
+  };
+
   if (viewMode === 'list') {
     return (
       <motion.div
@@ -97,7 +133,7 @@ const FileCard: React.FC<FileCardProps> = ({
           isSelected && "bg-blue-500/20 border-blue-500/50",
           "border-white/10"
         )}
-        onClick={() => onSelect(file.id)}
+        onClick={handleCardClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         whileHover={{ scale: 1.01 }}
@@ -105,9 +141,9 @@ const FileCard: React.FC<FileCardProps> = ({
       >
         {/* Thumbnail */}
         <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/10 flex-shrink-0 relative">
-          {file.thumbnail ? (
+          {getThumbnail() ? (
             <img
-              src={file.thumbnail}
+              src={getThumbnail()!}
               alt={file.name}
               className="w-full h-full object-cover"
             />
@@ -165,13 +201,13 @@ const FileCard: React.FC<FileCardProps> = ({
           <Button
             onClick={(e) => {
               e.stopPropagation();
-              onPlay(file);
+              onSelect(file.id);
             }}
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-white/70 hover:bg-white/10 hover:text-white"
           >
-            <Play className="h-4 w-4" />
+            <Eye className="h-4 w-4" />
           </Button>
           <Button
             onClick={(e) => {
@@ -211,7 +247,7 @@ const FileCard: React.FC<FileCardProps> = ({
         isSelected && "ring-2 ring-blue-500 border-blue-500/50",
         "border-white/10 bg-white/5 backdrop-blur-sm"
       )}
-      onClick={() => onSelect(file.id)}
+      onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       whileHover={{ y: -4, scale: 1.02 }}
@@ -220,9 +256,9 @@ const FileCard: React.FC<FileCardProps> = ({
     >
       {/* Thumbnail */}
       <div className="aspect-video relative overflow-hidden bg-white/10">
-        {file.thumbnail ? (
+        {getThumbnail() ? (
           <img
-            src={file.thumbnail}
+            src={getThumbnail()!}
             alt={file.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
@@ -232,39 +268,22 @@ const FileCard: React.FC<FileCardProps> = ({
           </div>
         )}
 
-        {/* Overlay */}
+        {/* Play Overlay */}
         <AnimatePresence>
-          {isHovered && (
+          {isHovered && (file.type === 'video' || file.type === 'image') && (
             <motion.div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPlay(file);
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-white/20 hover:text-white w-12 h-12"
-                >
-                  <Play className="h-6 w-6" />
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPreview(file);
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-white/20 hover:text-white w-12 h-12"
-                >
-                  <Eye className="h-6 w-6" />
-                </Button>
-              </div>
+              <motion.div
+                className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Play className="h-8 w-8 text-white ml-1" />
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -335,6 +354,17 @@ const FileCard: React.FC<FileCardProps> = ({
         {/* Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(file.id);
+              }}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button
               onClick={(e) => {
                 e.stopPropagation();

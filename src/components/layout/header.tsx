@@ -12,11 +12,17 @@ import {
   Settings,
   User,
   Bell,
-  X
+  X,
+  Sliders,
+  Layout,
+  Palette,
+  Monitor,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import FileUploadZone from '@/components/upload/FileUploadZone';
+import AppSettingsPanel from '@/components/settings/AppSettingsPanel';
 
 interface HeaderProps {
   viewMode: 'grid' | 'list';
@@ -40,6 +46,8 @@ const Header: React.FC<HeaderProps> = ({
   onShowSettings
 }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showAppSettings, setShowAppSettings] = useState(false);
+  const [showQuickSettings, setShowQuickSettings] = useState(false);
 
   const handleUpload = () => {
     setShowUploadModal(true);
@@ -162,8 +170,77 @@ const Header: React.FC<HeaderProps> = ({
             <Bell className="h-4 w-4" />
           </Button>
 
+          {/* Quick Settings Dropdown */}
+          <div className="relative">
+            <Button
+              onClick={() => setShowQuickSettings(!showQuickSettings)}
+              variant="ghost"
+              size="icon"
+              className="text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              <Sliders className="h-4 w-4" />
+            </Button>
+
+            {showQuickSettings && (
+              <motion.div
+                className="absolute top-12 right-0 bg-gray-900 rounded-xl border border-white/10 p-4 min-w-[250px] z-50"
+                initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              >
+                <h3 className="text-white font-medium mb-3">Quick Settings</h3>
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => {
+                      setShowAppSettings(true);
+                      setShowQuickSettings(false);
+                    }}
+                    variant="ghost"
+                    className="w-full justify-start text-white/70 hover:bg-white/10 hover:text-white"
+                  >
+                    <Layout className="h-4 w-4 mr-2" />
+                    Interface Settings
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowAppSettings(true);
+                      setShowQuickSettings(false);
+                    }}
+                    variant="ghost"
+                    className="w-full justify-start text-white/70 hover:bg-white/10 hover:text-white"
+                  >
+                    <Grid className="h-4 w-4 mr-2" />
+                    Grid Settings
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowAppSettings(true);
+                      setShowQuickSettings(false);
+                    }}
+                    variant="ghost"
+                    className="w-full justify-start text-white/70 hover:bg-white/10 hover:text-white"
+                  >
+                    <Palette className="h-4 w-4 mr-2" />
+                    Appearance
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowAppSettings(true);
+                      setShowQuickSettings(false);
+                    }}
+                    variant="ghost"
+                    className="w-full justify-start text-white/70 hover:bg-white/10 hover:text-white"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Performance
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
           <Button
-            onClick={onShowSettings}
+            onClick={() => setShowAppSettings(true)}
             variant="ghost"
             size="icon"
             className="text-white/70 hover:bg-white/10 hover:text-white"
@@ -228,6 +305,12 @@ const Header: React.FC<HeaderProps> = ({
           </motion.div>
         </motion.div>
       )}
+
+      {/* App Settings Panel */}
+      <AppSettingsPanel
+        isOpen={showAppSettings}
+        onClose={() => setShowAppSettings(false)}
+      />
     </>
   );
 };

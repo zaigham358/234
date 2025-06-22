@@ -203,8 +203,9 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
   const [gestureStartPos, setGestureStartPos] = useState<{x: number, y: number} | null>(null);
   const [gestureAction, setGestureAction] = useState<'volume' | 'brightness' | 'seek' | null>(null);
   const [previewTime, setPreviewTime] = useState<number | null>(null);
+  const [hasError, setHasError] = useState(false);
 
-  // Auto-hide controls
+  // Auto-hide controls timer
   const hideControlsTimer = useRef<NodeJS.Timeout>();
 
   const { addFavoriteClip, tags, preferences } = useAppStore();
@@ -331,7 +332,10 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        videoRef.current.play().catch((error) => {
+          console.error('Error playing video:', error);
+          setHasError(true);
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -532,12 +536,22 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
     }
   }, [togglePlay, toggleFullscreen]);
 
+  const handleVideoLoad = useCallback(() => {
+    setIsLoading(false);
+    setHasError(false);
+  }, []);
+
+  const handleVideoError = useCallback(() => {
+    setIsLoading(false);
+    setHasError(true);
+  }, []);
+
   return (
     <motion.div
       ref={containerRef}
       className={cn(
         "relative w-full mx-auto rounded-xl overflow-hidden bg-black shadow-2xl",
-        isFullscreen ? "h-screen w-screen rounded-none" : "max-w-6xl aspect-video"
+        isFullscreen ? "h-screen w-screen rounded-none" : "h-[80vh] max-w-full aspect-video"
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -552,27 +566,40 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
         onTimeUpdate={handleTimeUpdate}
         src={src}
         onClick={handleVideoClick}
-        onLoadedMetadata={() => {
-          if (videoRef.current) {
-            setDuration(videoRef.current.duration);
-            setIsLoading(false);
-          }
-        }}
+        onLoadedMetadata={handleVideoLoad}
         onLoadStart={() => setIsLoading(true)}
-        onCanPlay={() => setIsLoading(false)}
+        onCanPlay={handleVideoLoad}
+        onError={handleVideoError}
         style={{
           filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`
         }}
       />
 
       {/* Loading overlay */}
-      {isLoading && (
+      {isLoading && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <motion.div
             className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full"
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
+        </div>
+      )}
+
+      {/* Error overlay */}
+      {hasError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="text-center text-white">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-xl font-semibold mb-2">Video Error</h3>
+            <p className="text-white/70">Unable to load video file</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-blue-600 hover:bg-blue-700"
+            >
+              Retry
+            </Button>
+          </div>
         </div>
       )}
 
@@ -594,7 +621,7 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
               )}
               {gestureAction === 'brightness' && (
                 <>
-                  <Sun className="h-8 w-8 mx-auto mb-2" />
+                  <Monitor className="h-8 w-8 mx-auto mb-2" />
                   <span>{brightness}%</span>
                 </>
               )}
@@ -620,7 +647,7 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
       )}
 
       <AnimatePresence>
-        {showControls && (
+        {showControls && !hasError && (
           <motion.div
             className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"
             initial={{ opacity: 0 }}
@@ -632,7 +659,7 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
 
       {/* Top Controls */}
       <AnimatePresence>
-        {showControls && (
+        {showControls && !hasError && (
           <motion.div
             className="absolute top-4 left-4 right-4 flex items-center justify-between"
             initial={{ y: -20, opacity: 0 }}
@@ -709,7 +736,7 @@ const AdvancedVideoPlayer: React.FC<AdvancedVideoPlayerProps> = ({
 
       {/* Main Controls */}
       <AnimatePresence>
-        {showControls && (
+        {showControls && !hasError && (
           <motion.div
             className="absolute bottom-4 left-4 right-4"
             initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}

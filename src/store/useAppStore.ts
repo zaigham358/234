@@ -167,7 +167,7 @@ const defaultPreferences: UserPreferences = {
   doubleClickAction: 'open',
 };
 
-// Sample data with proper thumbnails
+// Sample data with proper thumbnails and video files
 const sampleFiles: FileItem[] = [
   {
     id: '1',
@@ -296,17 +296,55 @@ const sampleFiles: FileItem[] = [
     modifiedAt: new Date('2024-01-03'),
     isFavorite: false,
     tags: ['document', 'report', 'work']
+  },
+  {
+    id: '9',
+    name: 'Shreya Ghoshal - Deewani Mastani.mp4',
+    type: 'video',
+    size: 67890123,
+    duration: 320,
+    thumbnail: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400&h=300',
+    createdAt: new Date('2024-01-20'),
+    modifiedAt: new Date('2024-01-20'),
+    isFavorite: true,
+    tags: ['music', 'bollywood', 'shreya ghoshal'],
+    metadata: {
+      width: 1920,
+      height: 1080,
+      resolution: '1080p',
+      codec: 'H.264',
+      bitrate: '3.0 Mbps'
+    }
+  },
+  {
+    id: '10',
+    name: 'Rahat Fateh Ali Khan - Zaroori Tha.mp4',
+    type: 'video',
+    size: 89012345,
+    duration: 290,
+    thumbnail: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400&h=300',
+    createdAt: new Date('2024-01-18'),
+    modifiedAt: new Date('2024-01-18'),
+    isFavorite: false,
+    tags: ['music', 'sufi', 'rahat fateh ali khan'],
+    metadata: {
+      width: 1920,
+      height: 1080,
+      resolution: '1080p',
+      codec: 'H.264',
+      bitrate: '2.8 Mbps'
+    }
   }
 ];
 
 export const useAppStore = create<AppState>()(
   immer((set, get) => ({
-    // Initial State - Remove dummy data
-    files: [],
+    // Initial State with sample data
+    files: sampleFiles,
     selectedFiles: new Set(),
     favoriteClips: [],
     categories: [],
-    tags: ['music', 'bollywood', 'nature', 'documentary', '4k', 'landscape', 'photography', 'audio', 'document', 'work', 'mountain', 'ocean', 'waves', 'city', 'lights', 'urban'],
+    tags: ['music', 'bollywood', 'nature', 'documentary', '4k', 'landscape', 'photography', 'audio', 'document', 'work', 'mountain', 'ocean', 'waves', 'city', 'lights', 'urban', 'arijit singh', 'shreya ghoshal', 'rahat fateh ali khan', 'sufi'],
     searchQuery: '',
     searchFilters: [],
     searchHistory: [],
@@ -316,8 +354,8 @@ export const useAppStore = create<AppState>()(
     sortOrder: 'asc',
     preferences: defaultPreferences,
     analytics: {
-      totalFiles: 0,
-      totalSize: 0,
+      totalFiles: sampleFiles.length,
+      totalSize: sampleFiles.reduce((sum, file) => sum + file.size, 0),
       mostUsedTags: ['music', 'bollywood', 'nature'],
       recentActivity: [],
     },
